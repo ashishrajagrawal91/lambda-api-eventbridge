@@ -34,7 +34,7 @@
 
 
 #### Create todo item API
-https://buyqnpot4m.execute-api.eu-west-2.amazonaws.com/develop/todoItem
+https://5sunlcw8da.execute-api.eu-west-1.amazonaws.com/dev/pay
 #### Method
 POST
 #### Request Body
