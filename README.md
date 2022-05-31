@@ -33,7 +33,7 @@
 ### API Details
 
 
-#### Create todo item API
+#### Process Payment API
 https://5sunlcw8da.execute-api.eu-west-1.amazonaws.com/dev/pay
 #### Method
 POST
