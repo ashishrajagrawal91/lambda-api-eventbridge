@@ -1,0 +1,34 @@
+{
+  "name": "lambda-api-eventbridge",
+  "version": "1.0.0",
+  "description": "## Objectives This is a task aiming to validate basic understanding of : - AWS services: Lambda/DynamoDB/EventBridge/API Gateway - [Serverless framework](https://www.serverless.com/)",
+  "main": "webpack.config.js",
+  "scripts": {
+    "lint:fix": "npx eslint --ext .json,.ts . --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ashishrajagrawal91/lambda-api-eventbridge.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ashishrajagrawal91/lambda-api-eventbridge/issues"
+  },
+  "homepage": "https://github.com/ashishrajagrawal91/lambda-api-eventbridge#readme",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.97",
+    "@typescript-eslint/parser": "^5.27.0",
+    "eslint": "^8.16.0",
+    "eslint-plugin-json": "^3.1.0",
+    "serverless-webpack": "^5.7.1",
+    "ts-loader": "^9.3.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.100.0",
+    "@aws-sdk/client-eventbridge": "^3.100.0",
+    "@aws-sdk/util-dynamodb": "^3.100.0",
+    "aws-lambda": "^1.0.7",
+    "joi": "^17.6.0"
+  }
+}

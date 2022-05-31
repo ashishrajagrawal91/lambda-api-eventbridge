@@ -1,0 +1,151 @@
+service: serverless-task
+frameworkVersion: '3'
+variablesResolutionMode: 20210326
+plugins:
+  - serverless-webpack
+
+custom:
+  webpack:
+    packager: npm
+    includeModules:
+      forceExclude:
+        - aws-sdk
+  eventBus: ${opt:stage, 'dev'}-rc
+  eventBusArn: ${ssm:/pc/EVENT_BUS_ARN}/${self:custom.eventBus}
+  paymentTable: ${opt:stage, 'dev'}-${self:service}
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  architecture: arm64
+  versionFunctions: false
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'eu-west-1'}
+  lambdaHashingVersion: '20201221'
+  apiGateway:
+    shouldStartNameWithService: true
+  eventBridge:
+    useCloudFormation: true
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - events:PutEvents
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: 
+            - arn:aws:dynamodb:${aws:region}:*:table/${self:provider.stage}-${self:service}
+  tags:
+    Application : ${self:service}
+
+  environment:
+    SERVICE_NAME: ${self:service}
+    EVENTS_BUS: ${self:custom.eventBus}
+    APP_ENV: ${self:provider.stage}
+    DDB_PAYMENT_TABLE: ${self:custom.paymentTable}
+
+functions:
+  CreatePayment:
+    handler: functions/gateway/create_payment/index.handler
+    description: Lambda service to make payment
+    name: createPayment-${self:provider.stage}
+    events:
+      - http:
+          path: pay
+          method: post
+          cors: true
+
+  ProcessClientPayment:
+    handler: functions/events/process_client_payment/index.handler
+    description: Lambda service to process client payment
+    name: processClientPayment-${self:provider.stage}
+
+  ProcessVendorPayment:
+    handler: functions/events/process_vendor_payment/index.handler
+    description: Lambda service to process vendor payment
+    name: processVendorPayment-${self:provider.stage}
+
+resources:
+  Resources:
+    PaymentDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: requestId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: requestId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 2
+          WriteCapacityUnits: 2
+        TableName: ${self:provider.stage}-${self:service}
+
+    ClientPaymentProcessEventRule:
+      Type: 'AWS::Events::Rule'
+      Properties: 
+        Description: "Client payment process event rule"
+        EventBusName: ${self:custom.eventBusArn}
+        EventPattern: 
+          source: 
+            - 'app.payment'
+          detail: 
+            paymentSource: 
+              - 'client'
+        Targets: 
+          - 
+            Arn: 
+              Fn::GetAtt: 
+                - 'ProcessClientPaymentLambdaFunction'
+                - 'Arn'
+            Id: "ProcessClientPaymentTarget"
+
+    VendorPaymentProcessEventRule:
+      Type: 'AWS::Events::Rule'
+      Properties: 
+        Description: "Vendor payment process event rule"
+        EventBusName: ${self:custom.eventBusArn}
+        EventPattern: 
+          source: 
+            - 'app.payment'
+          detail: 
+            paymentSource: 
+              - 'vendor'
+        Targets: 
+          - 
+            Arn: 
+              Fn::GetAtt: 
+                - 'ProcessVendorPaymentLambdaFunction'
+                - 'Arn'
+            Id: "ProcessVendorPaymentTarget"
+
+    PermissionForClientPaymentProcessEventRule:
+      Type: 'AWS::Lambda::Permission'
+      Properties: 
+        FunctionName: processClientPayment-${self:provider.stage}
+        Action: 'lambda:InvokeFunction'
+        Principal: 'events.amazonaws.com'
+        SourceArn: 
+          Fn::GetAtt: 
+            - 'ClientPaymentProcessEventRule'
+            - 'Arn'
+
+    PermissionForVendorPaymentProcessEventRule:
+      Type: 'AWS::Lambda::Permission'
+      Properties: 
+        FunctionName: processVendorPayment-${self:provider.stage}
+        Action: 'lambda:InvokeFunction'
+        Principal: 'events.amazonaws.com'
+        SourceArn: 
+          Fn::GetAtt: 
+            - 'VendorPaymentProcessEventRule'
+            - 'Arn'

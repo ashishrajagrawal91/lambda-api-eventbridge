@@ -1,0 +1,42 @@
+{
+	"info": {
+		"_postman_id": "6147f3aa-023e-453b-a7fc-e1af24228348",
+		"name": "Payment Process",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "2146829"
+	},
+	"item": [
+		{
+			"name": "Process Payment Service",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"paymentSource\":\"vendor\",\n    \"destination\":\"orbital\",\n    \"currency\": \"USD\",\n    \"amount\": \"123.45\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://5sunlcw8da.execute-api.eu-west-1.amazonaws.com/dev/pay",
+					"protocol": "https",
+					"host": [
+						"5sunlcw8da",
+						"execute-api",
+						"eu-west-1",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"dev",
+						"pay"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
